@@ -2,214 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Gas Stop Planner (Free, OpenStreetMap)</title>
+  <title>Gas Stop Planner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: system-ui, sans-serif; }
+    body { background:#0d1117; color:#e6edf3; display:flex; flex-direction:column; min-height:100vh; }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      background: #020617;
-      color: #e5e7eb;
-    }
+    header { padding:1rem 1.5rem; border-bottom:1px solid #222; background:#0d1117; display:flex; justify-content:space-between; align-items:center; }
+    header h1 { font-size:1.4rem; font-weight:700; }
 
-    header {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid #1f2937;
-      background: #020617;
-    }
+    main { flex:1; display:grid; grid-template-columns:340px 1fr; gap:1rem; padding:1rem 1.5rem; }
+    @media(max-width:850px){ main{ grid-template-columns:1fr; } }
 
-    header h1 {
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
+    .panel { background:#161b22; border:1px solid #30363d; border-radius:1rem; padding:1rem; display:flex; flex-direction:column; }
+    .panel h2 { font-size:1.1rem; margin-bottom:0.5rem; font-weight:600; }
 
-    main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
-      gap: 1rem;
-      padding: 1rem 1.5rem;
-    }
+    form { display:flex; flex-direction:column; gap:1rem; }
+    label { font-size:0.82rem; opacity:0.8; margin-bottom:0.25rem; display:block; }
 
-    @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-    }
+    input { width:100%; padding:0.55rem 0.7rem; border-radius:0.5rem; border:1px solid #30363d; background:#0d1117; color:#e6edf3; font-size:0.9rem; }
+    input:focus{ outline:none; border-color:#58a6ff; }
 
-    .panel {
-      background: #020617;
-      border-radius: 0.75rem;
-      padding: 1rem;
-      border: 1px solid #1f2937;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
+    .inline-inputs { display:flex; gap:0.75rem; }
+    .inline-inputs>div { flex:1; }
 
-    .panel h2 {
-      font-size: 1rem;
-      margin-bottom: 0.75rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
+    button { padding:0.65rem; border-radius:0.5rem; border:none; background:#238636; color:white; font-weight:600; cursor:pointer; transition:0.15s; }
+    button:hover { background:#2ea043; }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      border: 1px solid #374151;
-      padding: 0.1rem 0.55rem;
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
+    #results{ margin-top:1rem; max-height:45vh; overflow-y:auto; padding-right:0.4rem; }
+    .stop-card { background:#0f1318; padding:0.75rem; border-radius:0.6rem; border:1px solid #30363d; margin-bottom:0.6rem; }
+    .stop-title{ font-size:0.95rem; font-weight:600; }
+    .stop-meta{ font-size:0.8rem; opacity:0.8; }
 
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
+    #map { width:100%; height:100%; min-height:400px; border-radius:1rem; overflow:hidden; }
 
-    label {
-      font-size: 0.85rem;
-      color: #9ca3af;
-      margin-bottom: 0.1rem;
-      display: block;
-    }
-
-    input {
-      width: 100%;
-      padding: 0.45rem 0.6rem;
-      border-radius: 0.5rem;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 0.9rem;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #60a5fa;
-      box-shadow: 0 0 0 1px #60a5fa33;
-    }
-
-    .inline-inputs {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .inline-inputs > div {
-      flex: 1;
-    }
-
-    button {
-      margin-top: 0.5rem;
-      padding: 0.6rem 0.75rem;
-      border-radius: 999px;
-      border: none;
-      background: #2563eb;
-      color: white;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-
-    .hint {
-      font-size: 0.8rem;
-      color: #6b7280;
-      margin-top: -0.3rem;
-    }
-
-    #error {
-      color: #fca5a5;
-      font-size: 0.8rem;
-      margin-top: 0.4rem;
-      min-height: 1em;
-    }
-
-    #results {
-      margin-top: 1rem;
-      max-height: 50vh;
-      overflow-y: auto;
-      padding-right: 0.25rem;
-    }
-
-    .result-summary {
-      font-size: 0.85rem;
-      margin-bottom: 0.5rem;
-      color: #9ca3af;
-    }
-
-    .stop-card {
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      padding: 0.6rem 0.7rem;
-      margin-bottom: 0.5rem;
-      background: #020617;
-    }
-
-    .stop-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 0.1rem;
-    }
-
-    .stop-meta {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .stop-distance {
-      font-size: 0.8rem;
-      margin-top: 0.2rem;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-      min-height: 400px;
-      border-radius: 0.75rem;
-      border: 1px solid #1f2937;
-      overflow: hidden;
-    }
-
-    /* Leaflet popup dark mode-ish tweaks */
-    .leaflet-popup-content-wrapper {
-      background: #020617;
-      color: #e5e7eb;
-      border-radius: 0.5rem;
-      border: 1px solid #1f2937;
-    }
-
-    .leaflet-popup-tip {
-      background: #020617;
-    }
+    .leaflet-popup-content-wrapper { background:#161b22; color:#e6edf3; border-radius:0.5rem; border:1px solid #30363d; }
+    .leaflet-popup-tip { background:#161b22; }
   </style>
 </head>
 <body>
@@ -219,52 +48,41 @@
 
   <main>
     <section class="panel">
-      <h2>
-        Trip Details
-        <span class="badge">OpenStreetMap · OpenRouteService · Overpass</span>
-      </h2>
-
+      <h2>Trip Planner</h2>
       <form id="trip-form">
         <div>
-          <label for="origin">Start location</label>
-          <input id="origin" type="text" placeholder="e.g. Seattle, WA" required />
+          <label for="origin">Start Location</label>
+          <input id="origin" type="text" placeholder="e.g. Seattle" required />
         </div>
 
         <div>
           <label for="destination">Destination</label>
-          <input id="destination" type="text" placeholder="e.g. San Francisco, CA" required />
+          <input id="destination" type="text" placeholder="e.g. San Francisco" required />
         </div>
 
         <div class="inline-inputs">
           <div>
-            <label for="range">Range per tank (miles)</label>
-            <input id="range" type="number" min="10" value="350" required />
-            <p class="hint">Approx. distance you can drive on a full tank.</p>
+            <label for="range">Range (mi)</label>
+            <input id="range" type="number" value="350" min="20" />
           </div>
           <div>
-            <label for="reserve">Reserve buffer (miles)</label>
-            <input id="reserve" type="number" min="0" value="40" />
-            <p class="hint">We’ll plan stops before this buffer.</p>
+            <label for="reserve">Reserve (mi)</label>
+            <input id="reserve" type="number" value="40" min="0" />
           </div>
         </div>
 
-        <button type="submit" id="plan-btn">Plan gas stops</button>
-        <div id="error"></div>
+        <button type="submit">Plan Route</button>
       </form>
-
       <div id="results"></div>
     </section>
 
     <section class="panel">
-      <h2>Route & Stops</h2>
+      <h2>Route Map</h2>
       <div id="map"></div>
     </section>
   </main>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Your app logic -->
   <script src="app.js"></script>
 </body>
 </html>
