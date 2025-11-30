@@ -35,6 +35,8 @@
     button:hover { background:#2ea043; transform:translateY(-2px); box-shadow:0 6px 0 #1c6a2c; }
     button:active { transform:translateY(0); box-shadow:0 3px 0 #1c6a2c; }
 
+    #error { color:#f87171; font-size:0.85rem; margin-top:0.3rem; min-height:1em; }
+
     #results{ margin-top:1rem; max-height:45vh; overflow-y:auto; padding-right:0.4rem; }
     .stop-card { background:#0f1318; padding:0.75rem; border-radius:0.6rem; border:1px solid #30363d; margin-bottom:0.6rem; transform:scale(0.98); opacity:0; animation:popIn .25s ease forwards; }
     @keyframes popIn { to { transform:scale(1); opacity:1; } }
@@ -78,6 +80,7 @@
         </div>
 
         <button type="submit">Plan Route</button>
+        <div id="error"></div>
       </form>
       <div id="results"></div>
     </section>
